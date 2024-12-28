@@ -6,7 +6,7 @@ import (
 )
 
 func registerLobbyHandlers(group *gin.RouterGroup) {
-	group.GET("/create", handlers.HandleLobbyCreation)
+	group.POST("/create", handlers.HandleLobbyCreation)
 
-	group.GET("/join", handlers.HandleLobbyJoin)
+	group.POST("/:lobbyUUID/join", handlers.HandleLobbyJoin)
 }

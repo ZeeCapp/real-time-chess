@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build backend",
+            "command": "go",
+            "type": "shell",
+            "args": [
+                "build",
+                "-C",
+                "${workspaceFolder}/backend",
+                "-o",
+                "./bin/main.exe",
+                "-buildmode=exe",
+                "./src"
+            ],
+            "problemMatcher": [
+                {
+                    "pattern": {
+                        "regexp": "."
+                    }
+                }
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Run backend",
+            "dependsOn": "Build backend",
+            "type": "shell",
+            "command": "${workspaceFolder}/backend/bin/main.exe",
+            "problemMatcher": [
+                {
+                    "pattern": {
+                        "regexp": "."
+                    }
+                }
+            ],
+        }
+    ]
+}
