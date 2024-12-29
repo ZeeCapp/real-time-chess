@@ -22,6 +22,11 @@ type joinLobbyRequestParams struct {
 	LobbyUUID string `uri:"lobbyUUID" binding:"required,uuid"`
 }
 
+type lobbyJoinedResponse struct {
+	Lobby           models.Lobby `json:"lobby"`
+	GameJoinEndoint string       `json:"gameJoinEndpoint"`
+}
+
 var lobbies []models.Lobby = make([]models.Lobby, 0)
 
 func HandleLobbyCreation(context *gin.Context) {
@@ -46,7 +51,7 @@ func HandleLobbyCreation(context *gin.Context) {
 
 	var responseBody lobbyCreatedResponse = lobbyCreatedResponse{
 		Lobby:           lobby,
-		GameJoinEndoint: fmt.Sprintf("/api/lobby/%s/game/join", lobby.LobbyUUID),
+		GameJoinEndoint: fmt.Sprintf("/api/lobby/%s/game/%s/join", lobby.LobbyUUID, lobby.Player1.PlayerUUID),
 		LobbyJoinURL:    fmt.Sprintf("/invite/%s", lobby.LobbyUUID),
 	}
 
@@ -72,7 +77,11 @@ func HandleLobbyJoin(context *gin.Context) {
 				Name:       requestPlayer.Username,
 				PlayerUUID: uuid.NewString(),
 			}
-			context.JSON(200, lobby)
+
+			context.JSON(200, lobbyJoinedResponse{
+				Lobby:           lobby,
+				GameJoinEndoint: fmt.Sprintf("/api/lobby/%s/game/%s/join", lobby.LobbyUUID, lobby.Player2.PlayerUUID),
+			})
 			return
 		}
 	}

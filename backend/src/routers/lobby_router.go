@@ -9,4 +9,6 @@ func registerLobbyHandlers(group *gin.RouterGroup) {
 	group.POST("/create", handlers.HandleLobbyCreation)
 
 	group.POST("/:lobbyUUID/join", handlers.HandleLobbyJoin)
+
+	group.GET("/:lobbyUUID/game/:playerUUID/join", handlers.HandleSocketUpgrade)
 }
