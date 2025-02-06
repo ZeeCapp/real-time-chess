@@ -45,7 +45,10 @@ type Player struct {
 */
 
 type GameInstance struct {
-	player1 Player
-	player2 Player
-	pieces  [32]ChessPiece
+	player1        Player
+	player2        Player
+	pieces         [32]ChessPiece
+	player1Castle  bool
+	player2Castle  bool
+	enPassantPawns []ChessPiece
 }

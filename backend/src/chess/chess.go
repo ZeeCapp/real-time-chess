@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-func NewGame(player1 Player, player2 Player) (*GameInstance, error) {
+func NewGame(player1 Player, player2 Player, pawnPromotionCallback func(ChessPiece) chan ChessPiece) (*GameInstance, error) {
 
 	if player1.White && player2.White {
 		return nil, errors.New("one player needs to be playing black")

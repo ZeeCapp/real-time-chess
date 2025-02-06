@@ -17,11 +17,13 @@ func (gameInstance *GameInstance) initDefaultState() {
 		blackPlayerId = gameInstance.player1.Id
 	}
 
-	initSpecialPieces(&gameInstance.pieces, 0, whitePlayerId, 0, true)
-	initPawns(&gameInstance.pieces, 8, whitePlayerId, 1, true)
-
-	initPawns(&gameInstance.pieces, 16, blackPlayerId, 6, false)
 	initSpecialPieces(&gameInstance.pieces, 24, blackPlayerId, 7, false)
+	initPawns(&gameInstance.pieces, 16, blackPlayerId, 6, false)
+
+	initPawns(&gameInstance.pieces, 8, whitePlayerId, 1, true)
+	initSpecialPieces(&gameInstance.pieces, 0, whitePlayerId, 0, true)
+
+	gameInstance.enPassantPawns = make([]ChessPiece, 0, 16)
 }
 
 func (gameInstance *GameInstance) GetPieces() [32]ChessPiece {
@@ -81,10 +83,6 @@ func movePawn(gameInstance *GameInstance, piece *ChessPiece, endX int8, endY int
 		return nil
 	}
 
-	if !isInsideBoardBoundaries(endX, endY) {
-		return errors.New("move outside of board boundaries")
-	}
-
 	var validTargetCoords []*Coordinates = make([]*Coordinates, 6)
 
 	// set all valid coords to -128 instead of 0 to avoid valid moves at x:0 & y:0 because
@@ -99,21 +97,7 @@ func movePawn(gameInstance *GameInstance, piece *ChessPiece, endX int8, endY int
 	currentX := piece.X
 	currentY := piece.Y
 
-	if piece.White {
-		if piece.Y == 1 {
-			validTargetCoords = append(validTargetCoords, &Coordinates{X: currentX, Y: currentY + 1})
-			validTargetCoords = append(validTargetCoords, &Coordinates{X: currentX, Y: currentY + 2})
-		} else {
-			validTargetCoords = append(validTargetCoords, &Coordinates{X: currentX, Y: currentY + 1})
-		}
-	} else {
-		if piece.Y == 6 {
-			validTargetCoords = append(validTargetCoords, &Coordinates{X: currentX, Y: currentY - 1})
-			validTargetCoords = append(validTargetCoords, &Coordinates{X: currentX, Y: currentY - 2})
-		} else {
-			validTargetCoords = append(validTargetCoords, &Coordinates{X: currentX, Y: currentY - 1})
-		}
-	}
+	appendPawnForwardMoves(gameInstance, piece, validTargetCoords)
 
 	if piece.White {
 		diagonalLeftPiece = gameInstance.findPieceAtPosition(currentX-1, currentY+1)
@@ -157,6 +141,10 @@ func movePawn(gameInstance *GameInstance, piece *ChessPiece, endX int8, endY int
 	piece.X = endX
 	piece.Y = endY
 
+	if endY-currentY == 2 || endY-currentY == -2 {
+		gameInstance.enPassantPawns = append(gameInstance.enPassantPawns, *piece)
+	}
+
 	return nil
 }
 
@@ -174,6 +162,26 @@ func moveRook(gameInstance *GameInstance, piece *ChessPiece, endX int8, endY int
 
 func moveQueen(gameInstance *GameInstance, piece *ChessPiece, endX int8, endY int8) error {
 	return nil
+}
+
+/*
+func handleEnPassant(gameInstance *GameInstance, piece *ChessPiece) {
+	for _, enPassantPawn := range gameInstance.enPassantPawns {
+
+	}
+}
+*/
+
+func clearEnPassantPawns(gameInstance *GameInstance, piece *ChessPiece) {
+	leftPieces := make([]ChessPiece, 0, 12)
+
+	for _, enPassantPiece := range gameInstance.enPassantPawns {
+		if piece.White != enPassantPiece.White {
+			leftPieces = append(leftPieces, enPassantPiece)
+		}
+	}
+
+	gameInstance.enPassantPawns = leftPieces
 }
 
 func moveKing(gameInstance *GameInstance, piece *ChessPiece, endX int8, endY int8) error {
@@ -211,6 +219,33 @@ func moveKing(gameInstance *GameInstance, piece *ChessPiece, endX int8, endY int
 	piece.Y = endY
 
 	return nil
+}
+
+func appendPawnForwardMoves(game *GameInstance, pawn *ChessPiece, coordinates []*Coordinates) {
+	for i := 0; i < 2; i++ {
+		moveCoords := getRelativeMove(pawn, int8(i), 0, 0, 0)
+		pieceAtCoords := game.findPieceAtPosition(moveCoords.X, moveCoords.Y)
+
+		if pieceAtCoords != nil {
+			return
+		}
+
+		coordinates = append(coordinates, &moveCoords)
+	}
+}
+
+func getRelativeMove(piece *ChessPiece, forward int8, back int8, left int8, right int8) Coordinates {
+	if piece.White {
+		return Coordinates{
+			X: piece.X + left - right,
+			Y: piece.Y + forward - back,
+		}
+	} else {
+		return Coordinates{
+			X: piece.X - left + right,
+			Y: piece.Y - forward + back,
+		}
+	}
 }
 
 func isFirendly(piece1 *ChessPiece, piece2 *ChessPiece) bool {

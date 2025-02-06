@@ -24,7 +24,7 @@ func main() {
 		},
 		chess.Player{
 			Id: "Player2",
-		})
+		}, nil)
 
 	if err != nil {
 		panic(err)
